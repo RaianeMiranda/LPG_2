@@ -123,8 +123,10 @@ void le_evento(struct Evento *e) {
     e->data = le_data();
 
     do {
-        printf("Horario de inicio (hora minuto): ");
-        scanf("%d %d", &e->inicio.hora, &e->inicio.minuto);
+        printf("Horario de inicio (hora): ");
+        scanf("%d", &e->inicio.hora);
+        printf("Horario de inicio (minuto): ");
+        scanf("%d", &e->inicio.minuto);
         if (!horario_valido(e->inicio))
             printf("Horario inválido! Por favor, digite um horário válido (00:00 a 23:59).\n");
     } while (!horario_valido(e->inicio));

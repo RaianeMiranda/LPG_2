@@ -21,7 +21,7 @@ void formatar_horario(struct Horario h, char *buffer) {
    ────────────────────────────────────────────────────────────── */
 
 int main() {
-    setlocale(LC_ALL, "Pt_BR.UTF-8");
+    setlocale(LC_ALL, "Pt.BR.UTF-8");
 
     struct Evento *agenda = NULL;
     int n = 0, op;
@@ -59,7 +59,7 @@ int main() {
     }
 
     /* ────── Menu interativo ────── */
-    do {
+     do {
         printf("1. Cadastrar evento\n");
         printf("2. Mostrar todos os eventos\n");
         printf("3. Mostrar eventos de uma data\n");
@@ -67,7 +67,17 @@ int main() {
         printf("5. Remover evento\n");
         printf("6. Sair\n");
         printf("Opcao: ");
-        scanf("%d", &op);
+
+        if (scanf("%d", &op) != 1) {
+            // Entrada inválida (ex: letras ou símbolos)
+            printf("Opcao invalida.\n");
+
+            // Limpa o buffer (descarta a entrada inválida até o '\n')
+            while (getchar() != '\n');
+
+            // Continua para repetir o menu
+            continue;
+        }
 
         switch (op) {
             case 1:
@@ -91,7 +101,8 @@ int main() {
             default:
                 printf("Opcao invalida.\n");
         }
-     } while (op != 6);
+
+    } while (op != 6);
 
     /* ────── Escrita da agenda no arquivo ────── */
     if (n > 1) {
