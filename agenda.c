@@ -225,3 +225,68 @@ void libera_agenda(struct Evento **agenda, int *n) {
         printf("Memoria liberada.\n");
     }
 }
+
+void mostra_todos_eventos(struct Evento *agenda, int n) {
+    if (n == 0) {
+        printf("Agenda vazia.\n");
+        return;
+    }
+    printf("\n--- Todos os Eventos ---\n");
+    for (int i = 0; i < n; i++) {
+        printf("[%d]\n", i);
+        mostra_evento(agenda[i]);
+    }
+}
+
+void mostra_eventos_data(struct Evento *agenda, int n) {
+    if (n == 0) {
+        printf("Agenda vazia. Nao ha eventos para listar.\n");
+        return;
+    }
+
+    struct Data d_busca;
+    printf("Digite a data que deseja buscar:\n");
+    d_busca = le_data();
+
+    int encontrados = 0;
+    printf("\n--- Eventos em %02d/%02d/%04d ---\n", d_busca.dia, d_busca.mes, d_busca.ano);
+
+    for (int i = 0; i < n; i++) {
+        if (mesma_data(agenda[i].data, d_busca)) {
+            mostra_evento(agenda[i]);
+            encontrados++;
+        }
+    }
+
+    if (encontrados == 0) {
+        printf("Nenhum evento encontrado para esta data.\n");
+    }
+}
+
+void mostra_eventos_descricao(struct Evento *agenda, int n) {
+    if (n == 0) {
+        printf("Agenda vazia. Não há eventos para listar.\n");
+        return;
+    }
+
+    char descricao_busca[100];
+    printf("Digite a descrição para buscar: ");
+    getchar(); // Limpa o buffer do teclado antes de ler a string
+    scanf("%[^\n]", descricao_busca);
+
+    int encontrados = 0;
+    printf("\n--- Eventos contendo a descrição \"%s\" ---\n", descricao_busca);
+
+    for (int i = 0; i < n; i++) {
+        // strstr encontra a primeira ocorrência de uma substring em outra.
+        // Se não encontrar, retorna NULL.
+        if (strstr(agenda[i].descricao, descricao_busca) != NULL) {
+            mostra_evento(agenda[i]);
+            encontrados++;
+        }
+    }
+
+    if (encontrados == 0) {
+        printf("Nenhum evento encontrado com essa descricao.\n");
+    }
+}

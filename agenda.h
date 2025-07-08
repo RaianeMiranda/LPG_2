@@ -29,5 +29,8 @@ void cadastra_evento(struct Evento **agenda, int *n);
 void remove_evento(struct Evento **agenda, int *n);
 void libera_agenda(struct Evento **agenda, int *n);
 int compara_eventos(const void *a, const void *b);
+void mostra_todos_eventos(struct Evento *agenda, int n);
+void mostra_eventos_data(struct Evento *agenda, int n);
+void mostra_eventos_descricao(struct Evento *agenda, int n);
 
 #endif

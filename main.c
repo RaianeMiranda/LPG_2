@@ -21,7 +21,7 @@ void formatar_horario(struct Horario h, char *buffer) {
    ────────────────────────────────────────────────────────────── */
 
 int main() {
-    setlocale(LC_ALL, "Portuguese_Brazil");
+    setlocale(LC_ALL, "Pt_BR.UTF-8");
 
     struct Evento *agenda = NULL;
     int n = 0, op;
@@ -60,10 +60,12 @@ int main() {
 
     /* ────── Menu interativo ────── */
     do {
-        printf("\n1 - Cadastrar evento\n");
-        printf("2 - Listar eventos\n");
-        printf("3 - Remover evento\n");
-        printf("4 - Sair\n");
+        printf("1. Cadastrar evento\n");
+        printf("2. Mostrar todos os eventos\n");
+        printf("3. Mostrar eventos de uma data\n");
+        printf("4. Mostrar eventos por descricao\n");
+        printf("5. Remover evento\n");
+        printf("6. Sair\n");
         printf("Opcao: ");
         scanf("%d", &op);
 
@@ -71,29 +73,25 @@ int main() {
             case 1:
                 cadastra_evento(&agenda, &n);
                 break;
-
             case 2:
-                if (n == 0) {
-                    printf("Agenda vazia.\n");
-                } else {
-                    for (int i = 0; i < n; i++) {
-                        printf("[%d]\n", i);
-                        mostra_evento(agenda[i]);
-                    }
-                }
+                mostra_todos_eventos(agenda, n);
                 break;
-
             case 3:
+                mostra_eventos_data(agenda, n);
+                break;
+            case 4:
+                mostra_eventos_descricao(agenda, n);
+                break;
+            case 5:
                 remove_evento(&agenda, &n);
                 break;
-
-            case 4:
+            case 6:
+                printf("Salvando agenda e saindo...\n");
                 break;
-
             default:
                 printf("Opcao invalida.\n");
         }
-    } while (op != 4);
+     } while (op != 6);
 
     /* ────── Escrita da agenda no arquivo ────── */
     if (n > 1) {
