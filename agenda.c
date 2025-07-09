@@ -3,90 +3,64 @@
 #include <string.h>
 #include "agenda.h"
 
-/* ──────────────────────────────────────────────────────────────
-   Validação de data e horário
-   ────────────────────────────────────────────────────────────── */
 
+
+// VERIFICAÇÃO SE DATA É EXISTENTE NO CALENDÁRIO 
 int data_valida(struct Data d) {
     if (d.ano < 1 || d.mes < 1 || d.mes > 12 || d.dia < 1)
         return 0;
 
     int dias_no_mes[] = {31,28,31,30,31,30,31,31,30,31,30,31};
 
-    
+// Ano bissexto: se for divisível por 4 e não por 100, ou divisível por 400
     if ((d.ano % 4 == 0 && d.ano % 100 != 0) || (d.ano % 400 == 0))
-        dias_no_mes[1] = 29; 
-        //Explicar ano bissexto
-        
-    if (d.dia > dias_no_mes[d.mes - 1]) //acessando o indice mes-1
-        return 0;
+        dias_no_mes[1] = 29;
 
-    return 1;
-}
-
-int horario_valido(struct Horario h) {
-    return (h.hora >= 0 && h.hora <= 23 && h.minuto >= 0 && h.minuto <= 59);
+    return d.dia <= dias_no_mes[d.mes - 1];
 }
 
 /* ──────────────────────────────────────────────────────────────
-   Entrada de data com validação por campo (dia, mês, ano)
+   VALIDAÇÃO DE DADOS DE DIA, MES, ANO (ERROS)
    ────────────────────────────────────────────────────────────── */
 
 struct Data le_data() {
     struct Data d;
 
-    do {
+    while (1) {
         printf("Dia: ");
-        if (scanf("%d", &d.dia) != 1) {
-            printf("Entrada invalida! Digite um número.\n");
-            while (getchar() != '\n');
-            d.dia = 0;
-            continue;
-        }
-        if (d.dia < 1 || d.dia > 31)
+        if (scanf("%d", &d.dia) != 1 || d.dia < 1 || d.dia > 31) {
             printf("Dia invalido! Deve estar entre 1 e 31.\n");
-    } while (d.dia < 1 || d.dia > 31);
+            while (getchar() != '\n');
+            continue;
+        }
 
-    do {
         printf("Mes: ");
-        if (scanf("%d", &d.mes) != 1) {
-            printf("Entrada invalida! Digite um número.\n");
-            while (getchar() != '\n');
-            d.mes = 0;
-            continue;
-        }
-        if (d.mes < 1 || d.mes > 12)
+        if (scanf("%d", &d.mes) != 1 || d.mes < 1 || d.mes > 12) {
             printf("Mes invalido! Deve estar entre 1 e 12.\n");
-    } while (d.mes < 1 || d.mes > 12);
-
-    do {
-        printf("Ano: ");
-        if (scanf("%d", &d.ano) != 1) {
-            printf("Entrada invalida! Digite um número.\n");
             while (getchar() != '\n');
-            d.ano = 0;
             continue;
         }
-        if (d.ano < 2020)
-            printf("Ano invalido! Deve ser maior que 2020.\n");
-    } while (d.ano < 2020);
 
-    if (!data_valida(d)) {
-        printf("Data inválida! Verifique o dia para o mês e ano fornecidos.\n");
-        return le_data();
+        printf("Ano: ");
+        if (scanf("%d", &d.ano) != 1 || d.ano < 2020) {
+            printf("Ano invalido! Deve ser maior que 2020.\n");
+            while (getchar() != '\n');
+            continue;
+        }
+
+        if (!data_valida(d)) {
+            printf("Data inválida! Verifique o dia para o mês e ano fornecidos.\n");
+            continue;
+        }
+
+        break;
     }
 
     return d;
 }
 
-/* ──────────────────────────────────────────────────────────────
-   Utilitários para comparação e exibição
-   ────────────────────────────────────────────────────────────── */
-
-void mostra_data(struct Data d) {
-    printf("%02d/%02d/%04d \n", d.dia, d.mes, d.ano);
-}
-
+//====================================================
+//DETALHAMENTO
 int compara_data_hora(struct Data a, struct Horario ha, struct Data b, struct Horario hb) {
     if (a.ano != b.ano) return a.ano - b.ano;
     if (a.mes != b.mes) return a.mes - b.mes;
@@ -94,20 +68,9 @@ int compara_data_hora(struct Data a, struct Horario ha, struct Data b, struct Ho
     if (ha.hora != hb.hora) return ha.hora - hb.hora;
     return ha.minuto - hb.minuto;
 }
-
-int mesma_data_remove(struct Data a, struct Data b) {
-    return a.dia == b.dia && a.mes == b.mes && a.ano == b.ano;
-}
-
-int mesmo_horario_remove(struct Horario a, struct Horario b) {
-    return a.hora == b.hora && a.minuto == b.minuto;
-}
-
 int conflito(struct Evento novo, struct Evento existente) {
-    if (compara_data_hora(novo.data, novo.inicio, existente.data, existente.fim) >= 0 ||
-        compara_data_hora(novo.data, novo.fim, existente.data, existente.inicio) <= 0)
-        return 0;
-    return 1;
+    return !(compara_data_hora(novo.data, novo.inicio, existente.data, existente.fim) >= 0 ||
+             compara_data_hora(novo.data, novo.fim, existente.data, existente.inicio) <= 0);
 }
 
 int compara_eventos(const void *a, const void *b) {
@@ -116,9 +79,14 @@ int compara_eventos(const void *a, const void *b) {
     return compara_data_hora(ea->data, ea->inicio, eb->data, eb->inicio);
 }
 
+//==================================================
 /* ──────────────────────────────────────────────────────────────
-   Entrada e exibição de eventos
+    1) CADASTRAR NOVO EVENTO => ENTRADA DE DADOS DOS EVENTOS
    ────────────────────────────────────────────────────────────── */
+// VERIFICAR SE HORA PODE SER CADASTRADA DENTRO DE 00 - 23
+int horario_valido(struct Horario h) {
+    return (h.hora >= 0 && h.hora <= 23 && h.minuto >= 0 && h.minuto <= 59);
+}
 
 void le_evento(struct Evento *e) {
     printf("Digite a data do evento:\n");
@@ -134,25 +102,22 @@ void le_evento(struct Evento *e) {
     } while (!horario_valido(e->inicio));
 
     do {
-         printf("Horario de Fim (hora): ");
+        printf("Horario de fim (hora): ");
         scanf("%d", &e->fim.hora);
-        printf("Horario de Fim (minuto): ");
+        printf("Horario de fim (minuto): ");
         scanf("%d", &e->fim.minuto);
 
-    if (!horario_valido(e->fim)) {
-        printf("Horario inválido! Por favor, digite um horário válido (00:00 a 23:59).\n");
-        continue;
-    }
+        if (!horario_valido(e->fim)) {
+            printf("Horario inválido! Por favor, digite um horário válido (00:00 a 23:59).\n");
+            continue;
+        }
 
-    // Verifica se o horário de fim é maior que o de início
-    if (e->fim.hora < e->inicio.hora || 
-       (e->fim.hora == e->inicio.hora && e->fim.minuto <= e->inicio.minuto)) {
-        printf("O horário de fim deve ser posterior ao horário de início.\n");
-        continue;
-    }
-
-    break; // Se passou por tudo, sai do laço
-} while (1);
+       if (compara_data_hora(e->data, e->fim, e->data, e->inicio) <= 0) {
+    printf("O horário de fim deve ser posterior ao início.\n");
+    continue;
+}
+        break;
+    } while (1);
 
     getchar();
 
@@ -162,16 +127,9 @@ void le_evento(struct Evento *e) {
     scanf(" %[^\n]", e->local);
 }
 
-void mostra_evento(struct Evento e) {
-    mostra_data(e.data);
-    printf("%02d:%02d - %02d:%02d \n", e.inicio.hora, e.inicio.minuto, e.fim.hora, e.fim.minuto);
-    printf("%s \n", e.descricao);
-    printf("%s \n", e.local);
-    printf("------------------------\n");
-}
 
 /* ──────────────────────────────────────────────────────────────
-   Cadastro, remoção e liberação de eventos
+   FUNÇÃO PRINCIPAL DE CADASTRO COM ORDENAÇÃO CRONOLÓGICA
    ────────────────────────────────────────────────────────────── */
 
 void cadastra_evento(struct Evento **agenda, int *n) {
@@ -180,77 +138,41 @@ void cadastra_evento(struct Evento **agenda, int *n) {
 
     for (int i = 0; i < *n; i++) {
         if (conflito(novo, (*agenda)[i])) {
-            printf("Erro: evento conflita com outro ja existente!\n");
+            printf("Erro: evento conflita com outro já existente!\n");
             return;
         }
     }
-
+    //Aumentando o vetor
     *agenda = realloc(*agenda, (*n + 1) * sizeof(struct Evento));
-    if (*agenda == NULL) {
-        printf("Erro de memoria!\n");
+    if (!*agenda) {
+        printf("Erro de memória!\n");
         return;
     }
 
-    (*agenda)[*n] = novo;
-    (*n)++;
+    //ordenando
+    (*agenda)[(*n)++] = novo;
     qsort(*agenda, *n, sizeof(struct Evento), compara_eventos);
     printf("Evento cadastrado com sucesso!\n");
 }
 
-void remove_evento(struct Evento **agenda, int *n) {
-    if (*n == 0) {
-        printf("Nenhum evento cadastrado.\n");
-        return;
-    }
+// 2) MOSTRANDO TODOS OS EVENTOS 
+void mostra_data(struct Data d) {
+    printf("%02d/%02d/%04d\n", d.dia, d.mes, d.ano);
+} //função pra printar struct de Data
 
-    struct Data d;
-    struct Horario h;
-
-    printf("Digite a data do evento a remover:\n");
-    d = le_data();
-
-    printf("Horario de inicio (hora): ");
-    scanf(" %d", &h.hora);
-    printf("Horario de inicio (minuto): ");
-    scanf("%d", &h.minuto);
-    getchar();
-
-    int i, achou = 0;
-    for (i = 0; i < *n; i++) {
-        if (mesma_data_remove(d, (*agenda)[i].data) && mesmo_horario_remove(h, (*agenda)[i].inicio)) {
-            achou = 1;
-            break;
-        }
-    }
-
-    if (!achou) {
-        printf("Evento nao encontrado.\n");
-        return;
-    }
-
-    for (int j = i; j < *n - 1; j++) {
-        (*agenda)[j] = (*agenda)[j + 1];
-    }
-
-    (*n)--;
-    *agenda = realloc(*agenda, (*n) * sizeof(struct Evento));
-    printf("Evento removido com sucesso.\n");
-}
-
-void libera_agenda(struct Evento **agenda, int *n) {
-    if (*agenda != NULL) {
-        free(*agenda);
-        *agenda = NULL;
-        *n = 0;
-        printf("Memoria liberada.\n");
-    }
-}
+void mostra_evento(struct Evento e) {
+    mostra_data(e.data);
+    printf("%02d:%02d - %02d:%02d\n", e.inicio.hora, e.inicio.minuto, e.fim.hora, e.fim.minuto);
+    printf("%s\n%s\n", e.descricao, e.local);
+    printf("------------------------\n");
+} //Função reutilizada em todos os "mostras" para print
 
 void mostra_todos_eventos(struct Evento *agenda, int n) {
     if (n == 0) {
         printf("Agenda vazia.\n");
         return;
     }
+
     printf("\n--- Todos os Eventos ---\n");
     for (int i = 0; i < n; i++) {
         printf("[%d]\n", i);
@@ -258,19 +180,20 @@ void mostra_todos_eventos(struct Evento *agenda, int n) {
     }
 }
 
+// 3) MOSTRA EVENTOS POR DATA (usa o mostra_evento)
 void mostra_eventos_data(struct Evento *agenda, int n) {
     if (n == 0) {
         printf("Agenda vazia. Nao ha eventos para listar.\n");
         return;
     }
-
+    
     struct Data d_busca;
     printf("Digite a data que deseja buscar:\n");
     d_busca = le_data();
-
+    
     int encontrados = 0;
     printf("\n--- Eventos em %02d/%02d/%04d ---\n", d_busca.dia, d_busca.mes, d_busca.ano);
-
+    
     for (int i = 0; i < n; i++) {
         if (mesma_data_remove(agenda[i].data, d_busca)) {
             mostra_evento(agenda[i]);
@@ -282,7 +205,7 @@ void mostra_eventos_data(struct Evento *agenda, int n) {
         printf("Nenhum evento encontrado para esta data.\n");
     }
 }
-
+// 4) MOSTRA EVENTOS POR DATA (usa o mostra_evento)
 void mostra_eventos_descricao(struct Evento *agenda, int n) {
     if (n == 0) {
         printf("Agenda vazia. Não há eventos para listar.\n");
@@ -293,10 +216,10 @@ void mostra_eventos_descricao(struct Evento *agenda, int n) {
     printf("Digite a descrição para buscar: ");
     getchar(); // Limpa o buffer do teclado antes de ler a string
     scanf("%[^\n]", descricao_busca);
-
+    
     int encontrados = 0;
     printf("\n--- Eventos contendo a descrição \"%s\" ---\n", descricao_busca);
-
+    
     for (int i = 0; i < n; i++) {
         // strstr encontra a primeira ocorrência de uma substring em outra.
         // Se não encontrar, retorna NULL.
@@ -309,4 +232,51 @@ void mostra_eventos_descricao(struct Evento *agenda, int n) {
     if (encontrados == 0) {
         printf("Nenhum evento encontrado com essa descricao.\n");
     }
+}
+
+
+// 5) FUNÇÕES PARA COMPARAR E REMOVER EVENTO
+int mesma_data_remove(struct Data a, struct Data b) {
+    return a.dia == b.dia && a.mes == b.mes && a.ano == b.ano;
+}
+
+int mesmo_horario_remove(struct Horario a, struct Horario b) {
+    return a.hora == b.hora && a.minuto == b.minuto;
+}
+
+// 5) FUNÇÃO DE REMOVER EVENTO
+void remove_evento(struct Evento **agenda, int *n) {
+    if (*n == 0) {
+        printf("Nenhum evento cadastrado.\n");
+        return;
+    }
+
+    struct Data d = le_data();
+    struct Horario h;
+    printf("Horario de inicio (hora): ");
+    scanf("%d", &h.hora);
+    printf("Horario de inicio (minuto): ");
+    scanf("%d", &h.minuto);
+    getchar();
+
+    for (int i = 0; i < *n; i++) {
+        if (mesma_data_remove(d, (*agenda)[i].data) && mesmo_horario_remove(h, (*agenda)[i].inicio)) {
+            for (int j = i; j < *n - 1; j++) {
+                (*agenda)[j] = (*agenda)[j + 1];
+            }
+            (*n)--;
+            *agenda = realloc(*agenda, (*n) * sizeof(struct Evento));
+            printf("Evento removido com sucesso.\n");
+            return;
+        }
+    }
+    printf("Evento nao encontrado.\n");
+}
+
+//6) SAIR DO PROGRAMA
+void libera_agenda(struct Evento **agenda, int *n) {
+    free(*agenda);
+    *agenda = NULL;
+    *n = 0;
+    printf("Memoria liberada.\n");
 }
