@@ -13,10 +13,12 @@ int data_valida(struct Data d) {
 
     int dias_no_mes[] = {31,28,31,30,31,30,31,31,30,31,30,31};
 
+    
     if ((d.ano % 4 == 0 && d.ano % 100 != 0) || (d.ano % 400 == 0))
-        dias_no_mes[1] = 29;
-
-    if (d.dia > dias_no_mes[d.mes - 1])
+        dias_no_mes[1] = 29; 
+        //Explicar ano bissexto
+        
+    if (d.dia > dias_no_mes[d.mes - 1]) //acessando o indice mes-1
         return 0;
 
     return 1;
@@ -93,15 +95,15 @@ int compara_data_hora(struct Data a, struct Horario ha, struct Data b, struct Ho
     return ha.minuto - hb.minuto;
 }
 
-int mesma_data(struct Data a, struct Data b) {
+int mesma_data_remove(struct Data a, struct Data b) {
     return a.dia == b.dia && a.mes == b.mes && a.ano == b.ano;
 }
 
-int mesmo_horario(struct Horario a, struct Horario b) {
+int mesmo_horario_remove(struct Horario a, struct Horario b) {
     return a.hora == b.hora && a.minuto == b.minuto;
 }
 
-int validacao(struct Evento novo, struct Evento existente) {
+int conflito(struct Evento novo, struct Evento existente) {
     if (compara_data_hora(novo.data, novo.inicio, existente.data, existente.fim) >= 0 ||
         compara_data_hora(novo.data, novo.fim, existente.data, existente.inicio) <= 0)
         return 0;
@@ -132,11 +134,25 @@ void le_evento(struct Evento *e) {
     } while (!horario_valido(e->inicio));
 
     do {
-        printf("Horario de fim (hora minuto): ");
-        scanf("%d %d", &e->fim.hora, &e->fim.minuto);
-        if (!horario_valido(e->fim))
-            printf("Horario inválido! Por favor, digite um horário válido (00:00 a 23:59).\n");
-    } while (!horario_valido(e->fim));
+         printf("Horario de Fim (hora): ");
+        scanf("%d", &e->fim.hora);
+        printf("Horario de Fim (minuto): ");
+        scanf("%d", &e->fim.minuto);
+
+    if (!horario_valido(e->fim)) {
+        printf("Horario inválido! Por favor, digite um horário válido (00:00 a 23:59).\n");
+        continue;
+    }
+
+    // Verifica se o horário de fim é maior que o de início
+    if (e->fim.hora < e->inicio.hora || 
+       (e->fim.hora == e->inicio.hora && e->fim.minuto <= e->inicio.minuto)) {
+        printf("O horário de fim deve ser posterior ao horário de início.\n");
+        continue;
+    }
+
+    break; // Se passou por tudo, sai do laço
+} while (1);
 
     getchar();
 
@@ -163,7 +179,7 @@ void cadastra_evento(struct Evento **agenda, int *n) {
     le_evento(&novo);
 
     for (int i = 0; i < *n; i++) {
-        if (validacao(novo, (*agenda)[i])) {
+        if (conflito(novo, (*agenda)[i])) {
             printf("Erro: evento conflita com outro ja existente!\n");
             return;
         }
@@ -193,13 +209,15 @@ void remove_evento(struct Evento **agenda, int *n) {
     printf("Digite a data do evento a remover:\n");
     d = le_data();
 
-    printf("Horario de inicio (hora minuto): ");
-    scanf("%d %d", &h.hora, &h.minuto);
+    printf("Horario de inicio (hora): ");
+    scanf(" %d", &h.hora);
+    printf("Horario de inicio (minuto): ");
+    scanf("%d", &h.minuto);
     getchar();
 
     int i, achou = 0;
     for (i = 0; i < *n; i++) {
-        if (mesma_data(d, (*agenda)[i].data) && mesmo_horario(h, (*agenda)[i].inicio)) {
+        if (mesma_data_remove(d, (*agenda)[i].data) && mesmo_horario_remove(h, (*agenda)[i].inicio)) {
             achou = 1;
             break;
         }
@@ -254,7 +272,7 @@ void mostra_eventos_data(struct Evento *agenda, int n) {
     printf("\n--- Eventos em %02d/%02d/%04d ---\n", d_busca.dia, d_busca.mes, d_busca.ano);
 
     for (int i = 0; i < n; i++) {
-        if (mesma_data(agenda[i].data, d_busca)) {
+        if (mesma_data_remove(agenda[i].data, d_busca)) {
             mostra_evento(agenda[i]);
             encontrados++;
         }
